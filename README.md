@@ -2,6 +2,19 @@
 
 A dual-interface Electron desktop application for image viewing and editing that provides both a local desktop interface and a web-accessible interface with shared functionality.
 
+## Repository
+
+**GitHub**: [https://github.com/ddttom/adjuster](https://github.com/ddttom/adjuster)
+
+## Quick Start
+
+```bash
+git clone https://github.com/ddttom/adjuster.git
+cd adjuster
+npm install
+npm start
+```
+
 ## Features
 
 - **Folder Selection**: Choose any folder containing images to start viewing
@@ -32,7 +45,7 @@ A dual-interface Electron desktop application for image viewing and editing that
 ## Project Structure
 
 ```
-image-adjuster/
+adjuster/
 ├── src/
 │   ├── main/           # Main process (Electron)
 │   │   ├── index.js    # Application entry point
@@ -67,10 +80,10 @@ image-adjuster/
 
 ### Setup
 
-1. **Clone or download the project**
+1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd image-adjuster
+   git clone https://github.com/ddttom/adjuster.git
+   cd adjuster
    ```
 
 2. **Install dependencies**
@@ -259,9 +272,15 @@ export DEBUG=image-adjuster:*
 
 MIT License - see LICENSE file for details
 
+## Screenshots
+
+![Image Adjuster Interface](docs/screenshots/main-interface.png)
+*Main application interface showing image viewer and control panel*
+
 ## Support
 
 For issues and questions:
 1. Check the troubleshooting section above
 2. Review the technical specifications in `documents/tech-spec.md`
-3. Check existing issues in the project repository
+3. Open an issue on GitHub: [https://github.com/ddttom/adjuster/issues](https://github.com/ddttom/adjuster/issues)
+4. Check existing issues and discussions in the repository
