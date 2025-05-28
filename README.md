@@ -19,11 +19,11 @@ npm start
 
 - **Folder Selection**: Choose any folder containing images to start viewing
 - **Recursive Scanning**: Automatically finds images in all subdirectories
-- **Image Transformations**: 
+- **Image Transformations**:
   - Rotate left/right (90° increments)
   - Flip vertically
   - Real-time preview of changes
-- **Navigation**: 
+- **Navigation**:
   - Previous/Next image navigation
   - Keyboard shortcuts (arrow keys)
   - Skip functionality to advance without saving
@@ -44,7 +44,7 @@ npm start
 
 ## Project Structure
 
-```
+```bash
 adjuster/
 ├── src/
 │   ├── main/           # Main process (Electron)
@@ -81,17 +81,20 @@ adjuster/
 ### Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/ddttom/adjuster.git
    cd adjuster
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Install Electron globally (optional)**
+
    ```bash
    npm install -g electron
    ```
@@ -107,6 +110,7 @@ npm start
 ```
 
 This will:
+
 - Launch the Electron desktop window
 - Start the web server on port 3000
 - Display the folder selection dialog
@@ -156,16 +160,19 @@ npm run desktop
 ### Running Tests
 
 Run all tests:
+
 ```bash
 npm test
 ```
 
 Run tests in watch mode:
+
 ```bash
 npm run test:watch
 ```
 
 Run tests with coverage:
+
 ```bash
 npm run test:coverage
 ```
@@ -175,11 +182,13 @@ npm run test:coverage
 For development with hot-reload and debugging:
 
 1. Set environment variable:
+
    ```bash
    export NODE_ENV=development
    ```
 
 2. Start the application:
+
    ```bash
    npm start
    ```
@@ -229,6 +238,7 @@ The application includes comprehensive error handling:
 ## Browser Compatibility
 
 The web interface supports:
+
 - Chrome/Chromium 90+
 - Firefox 88+
 - Safari 14+
@@ -257,6 +267,7 @@ The web interface supports:
 ### Debug Mode
 
 Enable debug logging by setting:
+
 ```bash
 export DEBUG=image-adjuster:*
 ```
@@ -280,6 +291,7 @@ MIT License - see LICENSE file for details
 ## Support
 
 For issues and questions:
+
 1. Check the troubleshooting section above
 2. Review the technical specifications in `documents/tech-spec.md`
 3. Open an issue on GitHub: [https://github.com/ddttom/adjuster/issues](https://github.com/ddttom/adjuster/issues)
