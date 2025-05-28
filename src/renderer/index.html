@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'">
+    <title>Image Adjuster</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="../public/favicon.ico">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>Image Adjuster</h1>
+            <div class="header-info">
+                <span id="image-counter">No images loaded</span>
+                <span id="image-info"></span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Folder Selection Screen -->
+            <div id="folder-selection" class="screen active">
+                <div class="folder-selection-content">
+                    <div class="folder-icon">📁</div>
+                    <h2>Select Image Folder</h2>
+                    <p>Choose a folder containing images to get started</p>
+                    <button id="select-folder-btn" class="primary-button">
+                        Select Folder
+                    </button>
+                    <div class="supported-formats">
+                        <p>Supported formats: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Viewer Screen -->
+            <div id="image-viewer" class="screen">
+                <!-- Image Display Area -->
+                <div class="image-container">
+                    <div class="image-wrapper">
+                        <img id="current-image" alt="Current image" />
+                        <div id="loading-indicator" class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading image...</p>
+                        </div>
+                        <div id="error-message" class="error-message hidden">
+                            <p>Failed to load image</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Panel -->
+                <div class="control-panel">
+                    <div class="control-group navigation">
+                        <button id="prev-btn" class="control-button" title="Previous image (Left arrow)">
+                            <span class="icon">⬅️</span>
+                            <span class="label">Previous</span>
+                        </button>
+                        <button id="next-btn" class="control-button" title="Next image (Right arrow)">
+                            <span class="icon">➡️</span>
+                            <span class="label">Next</span>
+                        </button>
+                    </div>
+
+                    <div class="control-group transformations">
+                        <button id="rotate-left-btn" class="control-button" title="Rotate left 90°">
+                            <span class="icon">↺</span>
+                            <span class="label">Rotate Left</span>
+                        </button>
+                        <button id="rotate-right-btn" class="control-button" title="Rotate right 90°">
+                            <span class="icon">↻</span>
+                            <span class="label">Rotate Right</span>
+                        </button>
+                        <button id="flip-vertical-btn" class="control-button" title="Flip vertically">
+                            <span class="icon">⇅</span>
+                            <span class="label">Flip Vertical</span>
+                        </button>
+                    </div>
+
+                    <div class="control-group actions">
+                        <button id="skip-btn" class="control-button secondary" title="Skip to next without saving">
+                            <span class="icon">⏭️</span>
+                            <span class="label">Skip</span>
+                        </button>
+                        <button id="new-folder-btn" class="control-button secondary" title="Select new folder">
+                            <span class="icon">📁</span>
+                            <span class="label">New Folder</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <div class="status-item">
+                        <span id="current-folder">No folder selected</span>
+                    </div>
+                    <div class="status-item">
+                        <span id="pending-changes">No changes</span>
+                    </div>
+                    <div class="status-item">
+                        <span id="operation-status">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Error Toast -->
+        <div id="error-toast" class="toast error hidden">
+            <div class="toast-content">
+                <span class="toast-icon">⚠️</span>
+                <span class="toast-message"></span>
+                <button class="toast-close">&times;</button>
+            </div>
+        </div>
+
+        <!-- Success Toast -->
+        <div id="success-toast" class="toast success hidden">
+            <div class="toast-content">
+                <span class="toast-icon">✅</span>
+                <span class="toast-message"></span>
+                <button class="toast-close">&times;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard shortcuts help -->
+    <div id="help-overlay" class="help-overlay hidden">
+        <div class="help-content">
+            <h3>Keyboard Shortcuts</h3>
+            <ul>
+                <li><kbd>←</kbd> Previous image</li>
+                <li><kbd>→</kbd> Next image</li>
+                <li><kbd>R</kbd> Rotate right</li>
+                <li><kbd>L</kbd> Rotate left</li>
+                <li><kbd>F</kbd> Flip vertical</li>
+                <li><kbd>S</kbd> Skip to next</li>
+                <li><kbd>?</kbd> Show/hide help</li>
+                <li><kbd>Esc</kbd> Close help</li>
+            </ul>
+            <button id="close-help" class="primary-button">Close</button>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
