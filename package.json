@@ -6,8 +6,6 @@
   "type": "module",
   "scripts": {
     "start": "electron .",
-    "web": "node src/main/web-server.js",
-    "desktop": "electron src/main/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -25,7 +23,6 @@
     "supertest": "^6.3.0"
   },
   "dependencies": {
-    "express": "^4.18.0",
     "sharp": "^0.33.0"
   },
   "engines": {

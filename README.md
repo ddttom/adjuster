@@ -1,6 +1,6 @@
 # Image Adjuster
 
-A dual-interface Electron desktop application for image viewing and editing that provides both a local desktop interface and a web-accessible interface with shared functionality.
+An Electron desktop application for image viewing and editing with intuitive controls for transforming images.
 
 ## Repository
 
@@ -29,7 +29,7 @@ npm start
   - Skip functionality to advance without saving
 - **Auto-Save**: Automatically saves transformations when navigating to different images
 - **Supported Formats**: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF
-- **Dual Interface**: Both desktop Electron app and web interface
+- **Desktop Interface**: Native Electron application with intuitive controls
 - **Error Handling**: Comprehensive error handling with user feedback
 
 ## Technical Specifications
@@ -48,8 +48,7 @@ npm start
 adjuster/
 ├── src/
 │   ├── main/           # Main process (Electron)
-│   │   ├── index.js    # Application entry point
-│   │   └── web-server.js # Web server implementation
+│   │   └── index.js    # Application entry point
 │   ├── renderer/       # Renderer process (UI)
 │   │   ├── index.html  # Main HTML file
 │   │   ├── styles.css  # Application styles
@@ -58,14 +57,10 @@ adjuster/
 │   │   └── index.js    # Secure IPC bridge
 │   ├── services/       # Shared business logic
 │   │   └── image-service.js # Image processing service
-│   ├── public/         # Static assets
-│   │   └── favicon.ico # Application icon
 │   └── tests/          # Test files
 │       ├── setup.js    # Test configuration
-│       ├── image-service.test.js
-│       └── web-server.test.js
+│       └── image-service.test.js
 ├── documents/
-│   └── tech-spec.md    # Technical specifications
 ├── package.json        # Dependencies and scripts
 ├── jest.config.js      # Test configuration
 └── README.md          # This file
@@ -101,8 +96,6 @@ adjuster/
 
 ## Usage
 
-### Desktop Application
-
 Start the Electron desktop application:
 
 ```bash
@@ -112,26 +105,7 @@ npm start
 This will:
 
 - Launch the Electron desktop window
-- Start the web server on port 3000
 - Display the folder selection dialog
-
-### Web Interface Only
-
-Start just the web server:
-
-```bash
-npm run web
-```
-
-Then open your browser to: `http://localhost:3000`
-
-### Desktop Only
-
-Start just the Electron application without the web server:
-
-```bash
-npm run desktop
-```
 
 ## Application Workflow
 
@@ -197,7 +171,8 @@ This will open DevTools automatically for debugging.
 
 ### Code Organization
 
-- **Main Process**: Uses CommonJS with ES Module interop for Electron compatibility
+- **Main Process**: Uses ES modules for modern JavaScript features
+- **Preload Scripts**: Uses CommonJS for Electron compatibility
 - **Renderer Process**: Pure ES modules for modern JavaScript features
 - **Services**: ES modules for shared business logic
 - **Security**: Context isolation enabled, secure IPC communication
@@ -206,18 +181,16 @@ This will open DevTools automatically for debugging.
 
 ### Process Architecture
 
-- **Main Process**: Application lifecycle, window management, web server
+- **Main Process**: Application lifecycle, window management
 - **Renderer Process**: UI rendering, user interactions
 - **Preload Scripts**: Secure IPC bridge between main and renderer
-- **Web Server**: HTTP server for web interface access
 
 ### Security Features
 
 - Context isolation enabled
 - Content Security Policy (CSP) headers
 - Secure IPC communication channels
-- Input validation on both interfaces
-- CORS configuration for web API
+- Input validation and sanitization
 
 ## Error Handling
 
@@ -225,7 +198,6 @@ The application includes comprehensive error handling:
 
 - **File Access**: Handles permission errors and corrupted files
 - **Empty Directories**: Graceful handling of folders with no images
-- **Network Issues**: Web server error handling and recovery
 - **User Feedback**: Toast notifications for all operations
 
 ## Performance Considerations
@@ -234,15 +206,6 @@ The application includes comprehensive error handling:
 - **Memory Management**: Efficient image loading and cleanup
 - **Lazy Loading**: Images are loaded on-demand
 - **Resource Cleanup**: Proper cleanup on application exit
-
-## Browser Compatibility
-
-The web interface supports:
-
-- Chrome/Chromium 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
 
 ## Troubleshooting
 
@@ -260,9 +223,7 @@ The web interface supports:
    - Ensure you have write permissions for the image files
    - Check if files are not read-only
 
-4. **Web interface not accessible**
-   - Verify port 3000 is not in use by another application
-   - Check firewall settings if accessing from another device
+
 
 ### Debug Mode
 

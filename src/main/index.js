@@ -1,10 +1,13 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
-const path = require('path');
-const { createRequire } = require('module');
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import ES modules using dynamic import
 let imageService;
-let webServer;
 
 /**
  * Main application window
@@ -58,12 +61,7 @@ async function initializeServices() {
     const imageServiceModule = await import('../services/image-service.js');
     imageService = imageServiceModule.default;
 
-    const webServerModule = await import('./web-server.js');
-    webServer = webServerModule.default;
-
-    // Start web server
-    await webServer.start();
-    console.log('Web server started successfully');
+    console.log('Image service initialized successfully');
   } catch (error) {
     console.error('Failed to initialize services:', error);
   }
@@ -74,10 +72,7 @@ async function initializeServices() {
  */
 async function cleanup() {
   try {
-    if (webServer) {
-      await webServer.stop();
-      console.log('Web server stopped');
-    }
+    console.log('Application cleanup completed');
   } catch (error) {
     console.error('Error during cleanup:', error);
   }
@@ -100,10 +95,8 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', async () => {
   await cleanup();
   
-  // On macOS, keep app running even when all windows are closed
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // Quit the app on all platforms (including macOS) for this desktop application
+  app.quit();
 });
 
 // Handle app quit
