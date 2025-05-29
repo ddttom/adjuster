@@ -169,32 +169,62 @@ class ImageAdjuster {
    * Select a folder containing images
    */
   async selectFolder() {
+    const startTime = Date.now();
+    
+    console.log(`📁 FOLDER SELECTION START`);
+    
     try {
       this.setOperationStatus('Selecting folder...');
+      console.log(`   ⏳ Status: Selecting folder...`);
       
       const result = await window.electronAPI.selectFolder();
+      const duration = Date.now() - startTime;
       
       if (result.success) {
+        console.log(`✅ FOLDER SELECTION SUCCESS`);
+        console.log(`   ⏱️  Duration: ${duration}ms`);
+        console.log(`   📂 Path: ${result.folderPath}`);
+        console.log(`   🖼️  Images found: ${result.images.length}`);
+        
         this.images = result.images;
         this.currentFolder = result.folderPath;
         this.currentIndex = 0;
         this.resetTransformations();
         
         if (this.images.length > 0) {
+          console.log(`   📋 Image list:`, result.images.map(img => img.split('/').pop()));
+          console.log(`   🎯 Starting with: ${result.images[0].split('/').pop()}`);
+          
           this.showImageViewer();
           await this.loadCurrentImage();
           this.updateUI();
           this.showSuccess(`Loaded ${this.images.length} images from folder`);
+          
+          console.log(`   ✅ UI updated and first image loaded`);
         } else {
+          console.log(`   ⚠️  No supported images found`);
           this.showError('No supported images found in the selected folder');
         }
       } else if (!result.canceled) {
+        console.log(`❌ FOLDER SELECTION ERROR`);
+        console.log(`   ⏱️  Duration: ${duration}ms`);
+        console.log(`   🚨 Error: ${result.error || 'Unknown error'}`);
         this.showError(result.error || 'Failed to select folder');
+      } else {
+        console.log(`🚫 FOLDER SELECTION CANCELED`);
+        console.log(`   ⏱️  Duration: ${duration}ms`);
+        console.log(`   👤 User canceled the dialog`);
       }
       
       this.setOperationStatus('Ready');
+      console.log(`   📊 Status: Ready`);
+      
     } catch (error) {
-      console.error('Error selecting folder:', error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ FOLDER SELECTION EXCEPTION`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
+      
       this.showError('Failed to select folder');
       this.setOperationStatus('Ready');
     }
@@ -207,9 +237,17 @@ class ImageAdjuster {
   async navigateImage(direction) {
     if (this.images.length === 0) return;
 
+    const currentFileName = this.images[this.currentIndex] ? 
+      this.images[this.currentIndex].split('/').pop() : 'unknown';
+    const actionType = direction === -1 ? 'PREVIOUS' : 'NEXT';
+    
+    console.log(`🔄 NAVIGATION: ${actionType}`);
+    console.log(`   📂 Current: ${currentFileName} (${this.currentIndex + 1}/${this.images.length})`);
+
     try {
       // Save current transformations if any
       if (this.hasPendingTransformations()) {
+        console.log(`   💾 Auto-saving pending transformations before navigation`);
         await this.saveTransformations();
       }
 
@@ -219,19 +257,30 @@ class ImageAdjuster {
       if (newIndex < 0 || newIndex >= this.images.length) {
         // Handle edge cases
         if (newIndex < 0) {
+          console.log(`   ⚠️  Navigation blocked: Already at first image`);
           this.showError('Already at the first image');
         } else {
+          console.log(`   ⚠️  Navigation blocked: Already at last image`);
           this.showError('Already at the last image');
         }
         return;
       }
 
       this.currentIndex = newIndex;
+      const newFileName = this.images[this.currentIndex].split('/').pop();
+      
+      console.log(`   ➡️  Navigating to: ${newFileName} (${this.currentIndex + 1}/${this.images.length})`);
+      
       this.resetTransformations();
       await this.loadCurrentImage();
       this.updateUI();
+      
+      console.log(`✅ NAVIGATION SUCCESS: ${actionType}`);
+      console.log(`   📁 Now viewing: ${newFileName}`);
+      
     } catch (error) {
-      console.error('Error navigating image:', error);
+      console.error(`❌ NAVIGATION ERROR: ${actionType}`);
+      console.error(`   🚨 Error: ${error.message}`);
       this.showError('Failed to navigate to image');
     }
   }
@@ -241,14 +290,31 @@ class ImageAdjuster {
    * @param {number} degrees - Degrees to rotate (90 or -90)
    */
   rotateImage(degrees) {
+    const currentFileName = this.images[this.currentIndex] ? 
+      this.images[this.currentIndex].split('/').pop() : 'unknown';
+    const direction = degrees > 0 ? 'RIGHT' : 'LEFT';
+    
+    console.log(`🔄 ROTATE ${direction}: ${Math.abs(degrees)}°`);
+    console.log(`   📁 File: ${currentFileName}`);
+    console.log(`   🔄 Previous rotation: ${this.pendingTransformations.rotation}°`);
+    
     this.pendingTransformations.rotation += degrees;
     
     // Normalize rotation to 0-360 range
     this.pendingTransformations.rotation = 
       ((this.pendingTransformations.rotation % 360) + 360) % 360;
     
+    console.log(`   ✅ New rotation: ${this.pendingTransformations.rotation}°`);
+    console.log(`   🎯 Total pending transformations:`, {
+      rotation: this.pendingTransformations.rotation,
+      flipVertical: this.pendingTransformations.flipVertical,
+      flipHorizontal: this.pendingTransformations.flipHorizontal
+    });
+    
     this.updateImageTransform();
     this.updateUI();
+    
+    console.log(`✅ ROTATE ${direction} APPLIED: Visual preview updated`);
   }
 
   /**
@@ -256,14 +322,32 @@ class ImageAdjuster {
    * @param {string} direction - 'vertical' or 'horizontal'
    */
   flipImage(direction) {
+    const currentFileName = this.images[this.currentIndex] ? 
+      this.images[this.currentIndex].split('/').pop() : 'unknown';
+    
+    console.log(`🔄 FLIP ${direction.toUpperCase()}`);
+    console.log(`   📁 File: ${currentFileName}`);
+    
     if (direction === 'vertical') {
+      const previousState = this.pendingTransformations.flipVertical;
       this.pendingTransformations.flipVertical = !this.pendingTransformations.flipVertical;
+      console.log(`   ⇅ Vertical flip: ${previousState} → ${this.pendingTransformations.flipVertical}`);
     } else if (direction === 'horizontal') {
+      const previousState = this.pendingTransformations.flipHorizontal;
       this.pendingTransformations.flipHorizontal = !this.pendingTransformations.flipHorizontal;
+      console.log(`   ⇄ Horizontal flip: ${previousState} → ${this.pendingTransformations.flipHorizontal}`);
     }
+    
+    console.log(`   🎯 Total pending transformations:`, {
+      rotation: this.pendingTransformations.rotation,
+      flipVertical: this.pendingTransformations.flipVertical,
+      flipHorizontal: this.pendingTransformations.flipHorizontal
+    });
     
     this.updateImageTransform();
     this.updateUI();
+    
+    console.log(`✅ FLIP ${direction.toUpperCase()} APPLIED: Visual preview updated`);
   }
 
   /**
@@ -272,24 +356,52 @@ class ImageAdjuster {
   async skipImage() {
     if (this.images.length === 0) return;
 
+    const currentFileName = this.images[this.currentIndex] ? 
+      this.images[this.currentIndex].split('/').pop() : 'unknown';
+    const hasPendingChanges = this.hasPendingTransformations();
+    
+    console.log(`⏭️  SKIP ACTION`);
+    console.log(`   📁 Current: ${currentFileName} (${this.currentIndex + 1}/${this.images.length})`);
+    console.log(`   🔄 Pending changes: ${hasPendingChanges ? 'YES' : 'NO'}`);
+    
+    if (hasPendingChanges) {
+      console.log(`   🗑️  Discarding transformations:`, {
+        rotation: this.pendingTransformations.rotation,
+        flipVertical: this.pendingTransformations.flipVertical,
+        flipHorizontal: this.pendingTransformations.flipHorizontal
+      });
+    }
+
     try {
       // Reset transformations without saving
       this.resetTransformations();
+      console.log(`   ✅ Transformations discarded`);
       
       // Navigate to next image
       const newIndex = this.currentIndex + 1;
       
       if (newIndex >= this.images.length) {
+        console.log(`   ⚠️  Skip blocked: Already at last image`);
         this.showError('Already at the last image');
         return;
       }
 
       this.currentIndex = newIndex;
+      const newFileName = this.images[this.currentIndex].split('/').pop();
+      
+      console.log(`   ➡️  Skipping to: ${newFileName} (${this.currentIndex + 1}/${this.images.length})`);
+      
       await this.loadCurrentImage();
       this.updateUI();
+      
+      console.log(`✅ SKIP SUCCESS`);
+      console.log(`   📁 Now viewing: ${newFileName}`);
+      console.log(`   💾 Previous changes: DISCARDED (not saved)`);
+      
       this.showSuccess('Skipped to next image');
     } catch (error) {
-      console.error('Error skipping image:', error);
+      console.error(`❌ SKIP ERROR`);
+      console.error(`   🚨 Error: ${error.message}`);
       this.showError('Failed to skip image');
     }
   }
@@ -298,23 +410,51 @@ class ImageAdjuster {
    * Load the current image
    */
   async loadCurrentImage() {
-    if (this.images.length === 0) return;
+    if (this.images.length === 0) {
+      console.log(`📷 LOAD SKIPPED: No images available`);
+      return;
+    }
+
+    const imagePath = this.images[this.currentIndex];
+    const fileName = imagePath.split('/').pop();
+    const startTime = Date.now();
+    
+    console.log(`📷 LOAD START: ${fileName}`);
+    console.log(`   📁 Path: ${imagePath}`);
+    console.log(`   📍 Index: ${this.currentIndex + 1}/${this.images.length}`);
 
     try {
       this.showLoading();
+      console.log(`   ⏳ Loading indicator shown`);
       
-      const imagePath = this.images[this.currentIndex];
       const result = await window.electronAPI.getImageData(imagePath);
+      const duration = Date.now() - startTime;
       
       if (result.success) {
+        console.log(`✅ LOAD SUCCESS: ${fileName}`);
+        console.log(`   ⏱️  Duration: ${duration}ms`);
+        console.log(`   📊 Image info:`, {
+          width: result.data.width,
+          height: result.data.height,
+          format: result.data.format,
+          size: `${Math.round(result.data.size / 1024)} KB`
+        });
+        
         this.elements.currentImage.src = result.data.dataUrl;
         this.updateImageInfo(result.data);
+        
+        console.log(`   🖼️  Image displayed in UI`);
       } else {
         throw new Error(result.error || 'Failed to load image');
       }
     } catch (error) {
-      console.error('Error loading image:', error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ LOAD ERROR: ${fileName}`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
+      
       this.showImageError();
+      console.log(`   🚫 Error message displayed to user`);
     }
   }
 
@@ -322,24 +462,53 @@ class ImageAdjuster {
    * Save current transformations to the image file
    */
   async saveTransformations() {
-    if (!this.hasPendingTransformations()) return;
+    if (!this.hasPendingTransformations()) {
+      console.log(`💾 SAVE SKIPPED: No pending transformations`);
+      return;
+    }
+
+    const currentFileName = this.images[this.currentIndex] ? 
+      this.images[this.currentIndex].split('/').pop() : 'unknown';
+    const startTime = Date.now();
+    
+    console.log(`💾 SAVE START: ${currentFileName}`);
+    console.log(`   📁 File: ${this.images[this.currentIndex]}`);
+    console.log(`   🔄 Transformations to save:`, {
+      rotation: this.pendingTransformations.rotation,
+      flipVertical: this.pendingTransformations.flipVertical,
+      flipHorizontal: this.pendingTransformations.flipHorizontal
+    });
 
     try {
       this.setOperationStatus('Saving changes...');
+      console.log(`   ⏳ Status: Saving changes...`);
       
       const imagePath = this.images[this.currentIndex];
       const result = await window.electronAPI.transformImage(imagePath, this.pendingTransformations);
       
+      const duration = Date.now() - startTime;
+      
       if (result.success) {
+        console.log(`✅ SAVE SUCCESS: ${currentFileName}`);
+        console.log(`   ⏱️  Duration: ${duration}ms`);
+        console.log(`   💾 File updated on disk`);
+        console.log(`   🎯 Transformations applied permanently`);
+        
         this.showSuccess('Changes saved successfully');
       } else {
         throw new Error(result.error || 'Failed to save changes');
       }
     } catch (error) {
-      console.error('Error saving transformations:', error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ SAVE ERROR: ${currentFileName}`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
+      console.error(`   💾 File NOT updated`);
+      
       this.showError('Failed to save changes');
     } finally {
       this.setOperationStatus('Ready');
+      console.log(`   📊 Status: Ready`);
     }
   }
 

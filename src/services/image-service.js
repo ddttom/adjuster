@@ -74,45 +74,77 @@ class ImageService {
    * @returns {Promise<void>}
    */
   async applyTransformations(imagePath, transformations) {
+    const startTime = Date.now();
+    const fileName = path.basename(imagePath);
+    
     try {
+      // Log transformation start
+      console.log(`🔄 TRANSFORM START: ${fileName}`);
+      console.log(`   📁 Path: ${imagePath}`);
+      console.log(`   🔧 Transformations:`, {
+        rotation: transformations.rotation || 0,
+        flipVertical: transformations.flipVertical || false,
+        flipHorizontal: transformations.flipHorizontal || false
+      });
+
       // Validate image path
       await this._validateImagePath(imagePath);
 
       let image = sharp(imagePath);
+      const appliedTransforms = [];
 
       // Apply rotations
       if (transformations.rotation && transformations.rotation !== 0) {
         image = image.rotate(transformations.rotation);
+        appliedTransforms.push(`rotate ${transformations.rotation}°`);
+        console.log(`   ↻ Applied rotation: ${transformations.rotation}°`);
       }
 
       // Apply vertical flip
       if (transformations.flipVertical) {
         image = image.flip();
+        appliedTransforms.push('flip vertical');
+        console.log(`   ⇅ Applied vertical flip`);
       }
 
       // Apply horizontal flip
       if (transformations.flipHorizontal) {
         image = image.flop();
+        appliedTransforms.push('flip horizontal');
+        console.log(`   ⇄ Applied horizontal flip`);
       }
 
       // Create temporary file path
       const tempPath = imagePath + '.tmp';
       
+      console.log(`   💾 Saving to temporary file: ${path.basename(tempPath)}`);
+      
       // Save to temporary file first
       await image.toFile(tempPath);
+      
+      console.log(`   🔄 Replacing original file`);
       
       // Replace original file with transformed version
       await fs.rename(tempPath, imagePath);
 
-      console.log(`Applied transformations to: ${imagePath}`);
+      const duration = Date.now() - startTime;
+      console.log(`✅ TRANSFORM SUCCESS: ${fileName}`);
+      console.log(`   ⏱️  Duration: ${duration}ms`);
+      console.log(`   🎯 Applied: ${appliedTransforms.join(', ') || 'none'}`);
+      console.log(`   📊 File saved successfully`);
+      
     } catch (error) {
-      console.error('Error applying transformations:', error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ TRANSFORM ERROR: ${fileName}`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
       
       // Clean up temporary file if it exists
       try {
         await fs.unlink(imagePath + '.tmp');
+        console.log(`   🧹 Cleaned up temporary file`);
       } catch (cleanupError) {
-        // Ignore cleanup errors
+        console.warn(`   ⚠️  Could not clean up temporary file: ${cleanupError.message}`);
       }
       
       throw new Error(`Failed to transform image: ${error.message}`);

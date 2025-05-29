@@ -106,41 +106,94 @@ app.on('before-quit', async () => {
 
 // IPC handlers
 ipcMain.handle('select-folder', async () => {
+  const startTime = Date.now();
+  console.log(`🔌 IPC: select-folder request received`);
+  
   try {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ['openDirectory'],
       title: 'Select Image Folder'
     });
 
+    const duration = Date.now() - startTime;
+
     if (!result.canceled && result.filePaths.length > 0) {
       const folderPath = result.filePaths[0];
+      console.log(`   📂 Dialog result: ${folderPath}`);
+      console.log(`   🔍 Scanning for images...`);
+      
       const images = await imageService.scanFolder(folderPath);
+      
+      console.log(`✅ IPC: select-folder success`);
+      console.log(`   ⏱️  Duration: ${duration}ms`);
+      console.log(`   📁 Folder: ${folderPath}`);
+      console.log(`   🖼️  Images: ${images.length}`);
+      
       return { success: true, folderPath, images };
     }
 
+    console.log(`🚫 IPC: select-folder canceled`);
+    console.log(`   ⏱️  Duration: ${duration}ms`);
     return { success: false, canceled: true };
   } catch (error) {
-    console.error('Error selecting folder:', error);
+    const duration = Date.now() - startTime;
+    console.error(`❌ IPC: select-folder error`);
+    console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   🚨 Error: ${error.message}`);
     return { success: false, error: error.message };
   }
 });
 
 ipcMain.handle('transform-image', async (event, imagePath, transformations) => {
+  const startTime = Date.now();
+  const fileName = imagePath.split('/').pop();
+  
+  console.log(`🔌 IPC: transform-image request received`);
+  console.log(`   📁 File: ${fileName}`);
+  console.log(`   🔧 Transformations:`, transformations);
+  
   try {
     await imageService.applyTransformations(imagePath, transformations);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ IPC: transform-image success`);
+    console.log(`   ⏱️  Duration: ${duration}ms`);
+    console.log(`   📁 File: ${fileName}`);
+    
     return { success: true };
   } catch (error) {
-    console.error('Error transforming image:', error);
+    const duration = Date.now() - startTime;
+    console.error(`❌ IPC: transform-image error`);
+    console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   📁 File: ${fileName}`);
+    console.error(`   🚨 Error: ${error.message}`);
     return { success: false, error: error.message };
   }
 });
 
 ipcMain.handle('get-image-data', async (event, imagePath) => {
+  const startTime = Date.now();
+  const fileName = imagePath.split('/').pop();
+  
+  console.log(`🔌 IPC: get-image-data request received`);
+  console.log(`   📁 File: ${fileName}`);
+  
   try {
     const imageData = await imageService.getImageData(imagePath);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ IPC: get-image-data success`);
+    console.log(`   ⏱️  Duration: ${duration}ms`);
+    console.log(`   📁 File: ${fileName}`);
+    console.log(`   📊 Size: ${imageData.width}x${imageData.height}, ${Math.round(imageData.size / 1024)} KB`);
+    
     return { success: true, data: imageData };
   } catch (error) {
-    console.error('Error getting image data:', error);
+    const duration = Date.now() - startTime;
+    console.error(`❌ IPC: get-image-data error`);
+    console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   📁 File: ${fileName}`);
+    console.error(`   🚨 Error: ${error.message}`);
     return { success: false, error: error.message };
   }
 });
