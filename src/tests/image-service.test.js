@@ -53,10 +53,18 @@ describe('ImageService', () => {
     });
 
     it('should handle scan errors gracefully', async () => {
-      fs.readdir.mockRejectedValue(new Error('Permission denied'));
+      // Mock readdir to fail for subdirectories but succeed for main directory
+      fs.readdir
+        .mockResolvedValueOnce([
+          { name: 'accessible.jpg', isDirectory: () => false, isFile: () => true },
+          { name: 'restricted-folder', isDirectory: () => true, isFile: () => false }
+        ])
+        .mockRejectedValueOnce(new Error('Permission denied'));
 
-      await expect(imageService.scanFolder('/restricted/folder'))
-        .rejects.toThrow('Failed to scan folder');
+      const result = await imageService.scanFolder('/test/folder');
+
+      // Should return accessible images and continue despite subdirectory errors
+      expect(result).toEqual(['/test/folder/accessible.jpg']);
     });
 
     it('should filter out non-image files', async () => {
@@ -154,7 +162,8 @@ describe('ImageService', () => {
 
       const mockStats = {
         size: 1024000,
-        mtime: new Date('2023-01-01')
+        mtime: new Date('2023-01-01'),
+        isFile: () => true
       };
 
       const mockSharpInstance = {
@@ -193,7 +202,11 @@ describe('ImageService', () => {
       };
 
       sharp.mockReturnValue(mockSharpInstance);
-      fs.stat.mockResolvedValue({ size: 5000000, mtime: new Date() });
+      fs.stat.mockResolvedValue({ 
+        size: 5000000, 
+        mtime: new Date(),
+        isFile: () => true
+      });
 
       await imageService.getImageData('/test/large-image.png');
 
