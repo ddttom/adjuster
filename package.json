@@ -51,8 +51,10 @@
       "!**/*.test.js"
     ],
     "win": {
-      "target": "portable",
-      "sign": false
+      "target": "portable"
+    },
+    "nsis": {
+      "oneClick": false
     },
     "mac": {
       "target": "zip"
