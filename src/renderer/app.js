@@ -60,6 +60,7 @@ class ImageAdjuster {
     this.elements.rotateLeftBtn = document.getElementById('rotate-left-btn');
     this.elements.rotateRightBtn = document.getElementById('rotate-right-btn');
     this.elements.flipVerticalBtn = document.getElementById('flip-vertical-btn');
+    this.elements.flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
     this.elements.skipBtn = document.getElementById('skip-btn');
     this.elements.newFolderBtn = document.getElementById('new-folder-btn');
 
@@ -95,6 +96,7 @@ class ImageAdjuster {
     this.elements.rotateLeftBtn.addEventListener('click', () => this.rotateImage(-90));
     this.elements.rotateRightBtn.addEventListener('click', () => this.rotateImage(90));
     this.elements.flipVerticalBtn.addEventListener('click', () => this.flipImage('vertical'));
+    this.elements.flipHorizontalBtn.addEventListener('click', () => this.flipImage('horizontal'));
 
     // Actions
     this.elements.skipBtn.addEventListener('click', () => this.skipImage());
@@ -147,6 +149,11 @@ class ImageAdjuster {
         case 'F':
           e.preventDefault();
           this.flipImage('vertical');
+          break;
+        case 'm':
+        case 'M':
+          e.preventDefault();
+          this.flipImage('horizontal');
           break;
         case 's':
         case 'S':

@@ -22,6 +22,7 @@ npm start
 - **Image Transformations**:
   - Rotate left/right (90° increments)
   - Flip vertically
+  - Mirror (flip horizontally)
   - Real-time preview of changes
 - **Navigation**:
   - Previous/Next image navigation
@@ -137,6 +138,7 @@ This will:
 | `R` | Rotate right 90° |
 | `L` | Rotate left 90° |
 | `F` | Flip vertically |
+| `M` | Mirror (flip horizontally) |
 | `S` | Skip to next image |
 | `?` | Show/hide help |
 | `Esc` | Close help |
@@ -152,7 +154,8 @@ All major operations are logged with detailed information including:
 - **📁 Folder Selection**: Timing, path, and image count
 - **🔄 Image Navigation**: Direction, auto-save detection, and file names
 - **↻ Rotate Operations**: Degree tracking and transformation state
-- **⇅ Flip Operations**: State changes and transformation details
+- **⇅ Flip Vertical Operations**: State changes and transformation details
+- **⇄ Mirror (Flip Horizontal) Operations**: State changes and transformation details
 - **⏭️ Skip Actions**: Pending change handling and file transitions
 - **💾 Save Operations**: Duration, success/error status, and file details
 - **📷 Image Loading**: Metadata, performance metrics, and file information
