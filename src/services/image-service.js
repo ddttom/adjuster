@@ -265,6 +265,40 @@ class ImageService {
   }
 
   /**
+   * Delete an image file
+   * @param {string} imagePath - Path to the image file to delete
+   * @returns {Promise<void>}
+   */
+  async deleteImage(imagePath) {
+    const startTime = Date.now();
+    const fileName = path.basename(imagePath);
+    
+    try {
+      console.log(`🗑️  DELETE START: ${fileName}`);
+      console.log(`   📁 Path: ${imagePath}`);
+      
+      // Validate image path first
+      await this._validateImagePath(imagePath);
+      
+      // Delete the file
+      await fs.unlink(imagePath);
+      
+      const duration = Date.now() - startTime;
+      console.log(`✅ DELETE SUCCESS: ${fileName}`);
+      console.log(`   ⏱️  Duration: ${duration}ms`);
+      console.log(`   🗑️  File removed from disk`);
+      
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ DELETE ERROR: ${fileName}`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
+      
+      throw new Error(`Failed to delete image: ${error.message}`);
+    }
+  }
+
+  /**
    * Get supported image formats
    * @returns {Array<string>} Array of supported extensions
    */

@@ -29,6 +29,14 @@ const api = {
     ipcRenderer.invoke('get-image-data', imagePath),
 
   /**
+   * Delete an image file
+   * @param {string} imagePath - Path to the image file to delete
+   * @returns {Promise<Object>} Result object with success status
+   */
+  deleteImage: (imagePath) => 
+    ipcRenderer.invoke('delete-image', imagePath),
+
+  /**
    * Platform information
    */
   platform: process.platform,

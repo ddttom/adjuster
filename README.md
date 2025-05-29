@@ -24,6 +24,9 @@ npm start
   - Flip vertically
   - Mirror (flip horizontally)
   - Real-time preview of changes
+- **File Management**:
+  - Delete images with confirmation dialog
+  - Automatic navigation after deletion
 - **Navigation**:
   - Previous/Next image navigation
   - Keyboard shortcuts (arrow keys)
@@ -137,8 +140,9 @@ This will:
 | `→` | Next image |
 | `R` | Rotate right 90° |
 | `L` | Rotate left 90° |
-| `F` | Flip vertically |
-| `M` | Mirror (flip horizontally) |
+| `V` | Flip vertically |
+| `H` | Mirror (flip horizontally) |
+| `D` / `Del` | Delete current image |
 | `S` | Skip to next image |
 | `?` | Show/hide help |
 | `Esc` | Close help |
@@ -154,8 +158,9 @@ All major operations are logged with detailed information including:
 - **📁 Folder Selection**: Timing, path, and image count
 - **🔄 Image Navigation**: Direction, auto-save detection, and file names
 - **↻ Rotate Operations**: Degree tracking and transformation state
-- **⇅ Flip Vertical Operations**: State changes and transformation details
-- **⇄ Mirror (Flip Horizontal) Operations**: State changes and transformation details
+- **⇅ Flip Vertical Operations**: State changes and transformation details (V key)
+- **⇄ Mirror (Flip Horizontal) Operations**: State changes and transformation details (H key)
+- **🗑️ Delete Operations**: File deletion with confirmation and navigation handling
 - **⏭️ Skip Actions**: Pending change handling and file transitions
 - **💾 Save Operations**: Duration, success/error status, and file details
 - **📷 Image Loading**: Metadata, performance metrics, and file information

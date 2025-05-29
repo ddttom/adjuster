@@ -198,6 +198,34 @@ ipcMain.handle('get-image-data', async (event, imagePath) => {
   }
 });
 
+ipcMain.handle('delete-image', async (event, imagePath) => {
+  const startTime = Date.now();
+  const fileName = imagePath.split('/').pop();
+  
+  console.log(`🔌 IPC: delete-image request received`);
+  console.log(`   📁 File: ${fileName}`);
+  console.log(`   🗑️  Attempting to delete file`);
+  
+  try {
+    await imageService.deleteImage(imagePath);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ IPC: delete-image success`);
+    console.log(`   ⏱️  Duration: ${duration}ms`);
+    console.log(`   📁 File: ${fileName}`);
+    console.log(`   🗑️  File deleted successfully`);
+    
+    return { success: true };
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ IPC: delete-image error`);
+    console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   📁 File: ${fileName}`);
+    console.error(`   🚨 Error: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+});
+
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);

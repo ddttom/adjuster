@@ -61,7 +61,7 @@ class ImageAdjuster {
     this.elements.rotateRightBtn = document.getElementById('rotate-right-btn');
     this.elements.flipVerticalBtn = document.getElementById('flip-vertical-btn');
     this.elements.flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
-    this.elements.skipBtn = document.getElementById('skip-btn');
+    this.elements.deleteBtn = document.getElementById('delete-btn');
     this.elements.newFolderBtn = document.getElementById('new-folder-btn');
 
     // Status and info
@@ -99,7 +99,7 @@ class ImageAdjuster {
     this.elements.flipHorizontalBtn.addEventListener('click', () => this.flipImage('horizontal'));
 
     // Actions
-    this.elements.skipBtn.addEventListener('click', () => this.skipImage());
+    this.elements.deleteBtn.addEventListener('click', () => this.deleteImage());
 
     // Help
     this.elements.closeHelp.addEventListener('click', () => this.hideHelp());
@@ -145,15 +145,21 @@ class ImageAdjuster {
           e.preventDefault();
           this.rotateImage(-90);
           break;
-        case 'f':
-        case 'F':
+        case 'v':
+        case 'V':
           e.preventDefault();
           this.flipImage('vertical');
           break;
-        case 'm':
-        case 'M':
+        case 'h':
+        case 'H':
           e.preventDefault();
           this.flipImage('horizontal');
+          break;
+        case 'd':
+        case 'D':
+        case 'Delete':
+          e.preventDefault();
+          this.deleteImage();
           break;
         case 's':
         case 'S':
@@ -410,6 +416,78 @@ class ImageAdjuster {
       console.error(`❌ SKIP ERROR`);
       console.error(`   🚨 Error: ${error.message}`);
       this.showError('Failed to skip image');
+    }
+  }
+
+  /**
+   * Delete the current image file
+   */
+  async deleteImage() {
+    if (this.images.length === 0) return;
+
+    const currentFileName = this.images[this.currentIndex] ? 
+      this.images[this.currentIndex].split('/').pop() : 'unknown';
+    const imagePath = this.images[this.currentIndex];
+    const startTime = Date.now();
+    
+    console.log(`🗑️  DELETE ACTION`);
+    console.log(`   📁 File: ${currentFileName}`);
+    console.log(`   📍 Index: ${this.currentIndex + 1}/${this.images.length}`);
+    
+    // Confirm deletion
+    const confirmed = confirm(`Are you sure you want to delete "${currentFileName}"?\n\nThis action cannot be undone.`);
+    
+    if (!confirmed) {
+      console.log(`🚫 DELETE CANCELED: User canceled deletion`);
+      return;
+    }
+
+    try {
+      this.setOperationStatus('Deleting image...');
+      console.log(`   ⏳ Status: Deleting image...`);
+      
+      const result = await window.electronAPI.deleteImage(imagePath);
+      const duration = Date.now() - startTime;
+      
+      if (result.success) {
+        console.log(`✅ DELETE SUCCESS: ${currentFileName}`);
+        console.log(`   ⏱️  Duration: ${duration}ms`);
+        console.log(`   🗑️  File deleted from disk`);
+        
+        // Remove from images array
+        this.images.splice(this.currentIndex, 1);
+        
+        if (this.images.length === 0) {
+          console.log(`   📂 No more images in folder`);
+          this.showWelcomeScreen();
+          this.showSuccess('Image deleted. No more images in folder.');
+        } else {
+          // Adjust current index if needed
+          if (this.currentIndex >= this.images.length) {
+            this.currentIndex = this.images.length - 1;
+          }
+          
+          const newFileName = this.images[this.currentIndex].split('/').pop();
+          console.log(`   ➡️  Now viewing: ${newFileName} (${this.currentIndex + 1}/${this.images.length})`);
+          
+          this.resetTransformations();
+          await this.loadCurrentImage();
+          this.updateUI();
+          this.showSuccess(`Image deleted. Now viewing ${newFileName}`);
+        }
+      } else {
+        throw new Error(result.error || 'Failed to delete image');
+      }
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ DELETE ERROR: ${currentFileName}`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
+      
+      this.showError('Failed to delete image');
+    } finally {
+      this.setOperationStatus('Ready');
+      console.log(`   📊 Status: Ready`);
     }
   }
 
