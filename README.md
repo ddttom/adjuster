@@ -165,7 +165,7 @@ All major operations are logged with detailed information including:
 
 Logs use emojis for easy visual scanning and include:
 
-```
+```bash
 🔄 ROTATE RIGHT: 90°
    📁 File: example.jpg
    🔄 Previous rotation: 0°
@@ -286,8 +286,6 @@ The application includes comprehensive error handling:
    - Ensure you have write permissions for the image files
    - Check if files are not read-only
 
-
-
 ### Debug Mode
 
 The application includes comprehensive built-in logging for all operations. To view detailed logs:
@@ -297,7 +295,8 @@ The application includes comprehensive built-in logging for all operations. To v
 3. **All Operations Logged**: Every user action is logged with timing and details
 
 Example log output:
-```
+
+```bash
 🔄 NAVIGATION: NEXT
    📂 Current: image1.jpg (1/5)
    💾 Auto-saving pending transformations before navigation
