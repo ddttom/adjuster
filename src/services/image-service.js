@@ -95,12 +95,26 @@ class ImageService {
         image = image.flop();
       }
 
-      // Save the transformed image, overwriting the original
-      await image.toFile(imagePath);
+      // Create temporary file path
+      const tempPath = imagePath + '.tmp';
+      
+      // Save to temporary file first
+      await image.toFile(tempPath);
+      
+      // Replace original file with transformed version
+      await fs.rename(tempPath, imagePath);
 
       console.log(`Applied transformations to: ${imagePath}`);
     } catch (error) {
       console.error('Error applying transformations:', error);
+      
+      // Clean up temporary file if it exists
+      try {
+        await fs.unlink(imagePath + '.tmp');
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+      
       throw new Error(`Failed to transform image: ${error.message}`);
     }
   }

@@ -49,7 +49,9 @@ jest.mock('sharp', () => {
 jest.mock('fs/promises', () => ({
   readdir: jest.fn(),
   stat: jest.fn(),
-  access: jest.fn()
+  access: jest.fn(),
+  rename: jest.fn(),
+  unlink: jest.fn()
 }));
 
 // Setup and teardown

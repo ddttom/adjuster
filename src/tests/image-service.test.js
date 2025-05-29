@@ -89,12 +89,14 @@ describe('ImageService', () => {
 
       sharp.mockReturnValue(mockSharpInstance);
       fs.stat.mockResolvedValue({ isFile: () => true });
+      fs.rename.mockResolvedValue();
 
       const transformations = { rotation: 90 };
       await imageService.applyTransformations('/test/image.jpg', transformations);
 
       expect(mockSharpInstance.rotate).toHaveBeenCalledWith(90);
-      expect(mockSharpInstance.toFile).toHaveBeenCalledWith('/test/image.jpg');
+      expect(mockSharpInstance.toFile).toHaveBeenCalledWith('/test/image.jpg.tmp');
+      expect(fs.rename).toHaveBeenCalledWith('/test/image.jpg.tmp', '/test/image.jpg');
     });
 
     it('should apply flip transformations', async () => {
@@ -107,6 +109,7 @@ describe('ImageService', () => {
 
       sharp.mockReturnValue(mockSharpInstance);
       fs.stat.mockResolvedValue({ isFile: () => true });
+      fs.rename.mockResolvedValue();
 
       const transformations = { 
         flipVertical: true, 
@@ -116,6 +119,7 @@ describe('ImageService', () => {
 
       expect(mockSharpInstance.flip).toHaveBeenCalled();
       expect(mockSharpInstance.flop).toHaveBeenCalled();
+      expect(fs.rename).toHaveBeenCalledWith('/test/image.jpg.tmp', '/test/image.jpg');
     });
 
     it('should handle transformation errors', async () => {
