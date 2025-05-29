@@ -8,7 +8,13 @@
     "start": "electron .",
     "test": "jest --config jest.config.cjs",
     "test:watch": "jest --config jest.config.cjs --watch",
-    "test:coverage": "jest --config jest.config.cjs --coverage"
+    "test:coverage": "jest --config jest.config.cjs --coverage",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "dist": "npm run build",
+    "pack": "electron-builder --dir"
   },
   "keywords": [
     "electron",
@@ -23,12 +29,36 @@
     "babel-jest": "^29.0.0",
     "@babel/core": "^7.22.0",
     "@babel/preset-env": "^7.22.0",
-    "supertest": "^6.3.0"
+    "supertest": "^6.3.0",
+    "electron-builder": "^24.6.0"
   },
   "dependencies": {
     "sharp": "^0.33.0"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "build": {
+    "appId": "com.imageadjuster.app",
+    "productName": "Image Adjuster",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!src/tests/**/*",
+      "!**/*.test.js"
+    ],
+    "win": {
+      "target": "portable",
+      "sign": false
+    },
+    "mac": {
+      "target": "zip"
+    },
+    "linux": {
+      "target": "tar.gz"
+    }
   }
 }

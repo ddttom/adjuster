@@ -197,6 +197,40 @@ Open Developer Tools (F12) to view detailed logs in the console, or check the te
 - **⚠️ Warnings**: Non-critical issues or blocked actions
 - **📊 Performance**: Timing and performance metrics for all operations
 
+## Building Executables
+
+The application can be packaged into standalone executables for Windows, macOS, and Linux using Electron Builder.
+
+### Build Commands
+
+```bash
+# Build for Windows (creates portable .exe)
+npm run build:win
+
+# Build for macOS (creates .zip)
+npm run build:mac
+
+# Build for Linux (creates .tar.gz)
+npm run build:linux
+
+# Build for all platforms
+npm run build
+```
+
+### Build Output
+
+Built executables will be placed in the `dist/` directory:
+
+- **Windows**: `dist/Image Adjuster.exe` (portable executable)
+- **macOS**: `dist/Image Adjuster.zip` (application bundle)
+- **Linux**: `dist/Image Adjuster.tar.gz` (application archive)
+
+### Requirements
+
+- Node.js 18+ is required for building
+- The build process will automatically download the required Electron binaries
+- No additional dependencies are needed for the built executables
+
 ## Development
 
 ### Running Tests

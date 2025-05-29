@@ -33,6 +33,9 @@ build/Release
 node_modules/
 jspm_packages/
 
+# Build output
+dist/
+
 # TypeScript v1 declaration files
 typings/
 
@@ -120,6 +123,9 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+
+# Build output
+dist/
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
