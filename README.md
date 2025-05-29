@@ -30,6 +30,7 @@ npm start
 - **Auto-Save**: Automatically saves transformations when navigating to different images
 - **Supported Formats**: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF
 - **Desktop Interface**: Native Electron application with intuitive controls
+- **Comprehensive Logging**: Detailed logging of all user actions and operations
 - **Error Handling**: Comprehensive error handling with user feedback
 
 ## Technical Specifications
@@ -48,21 +49,32 @@ npm start
 adjuster/
 ├── src/
 │   ├── main/           # Main process (Electron)
-│   │   └── index.js    # Application entry point
+│   │   ├── index.js    # Application entry point
+│   │   └── web-server.js # Web server implementation
 │   ├── renderer/       # Renderer process (UI)
 │   │   ├── index.html  # Main HTML file
 │   │   ├── styles.css  # Application styles
-│   │   └── app.js      # Frontend JavaScript
+│   │   └── app.js      # Frontend JavaScript with logging
 │   ├── preload/        # Preload scripts
 │   │   └── index.js    # Secure IPC bridge
 │   ├── services/       # Shared business logic
-│   │   └── image-service.js # Image processing service
+│   │   └── image-service.js # Image processing with logging
+│   ├── public/         # Static assets
+│   │   └── favicon.ico # Application icon
 │   └── tests/          # Test files
-│       ├── setup.js    # Test configuration
-│       └── image-service.test.js
-├── documents/
+│       ├── setup.js    # ES modules test setup
+│       ├── setup.cjs   # CommonJS test setup
+│       ├── image-service.test.js # Service tests
+│       └── web-server.test.js # Server tests
+├── docs/               # Documentation
+│   └── development-notes/ # Development notes
+├── documents/          # Technical specifications
+│   └── tech-spec.md    # Technical specifications
+├── babel.config.cjs    # Babel configuration for tests
+├── jest.config.js      # ES modules Jest config
+├── jest.config.cjs     # CommonJS Jest config
 ├── package.json        # Dependencies and scripts
-├── jest.config.js      # Test configuration
+├── LICENSE             # MIT license
 └── README.md          # This file
 ```
 
@@ -128,6 +140,54 @@ This will:
 | `S` | Skip to next image |
 | `?` | Show/hide help |
 | `Esc` | Close help |
+
+## Logging
+
+The application includes comprehensive logging for all user actions and operations, making it easy to track and debug user interactions.
+
+### Logged Operations
+
+All major operations are logged with detailed information including:
+
+- **📁 Folder Selection**: Timing, path, and image count
+- **🔄 Image Navigation**: Direction, auto-save detection, and file names
+- **↻ Rotate Operations**: Degree tracking and transformation state
+- **⇅ Flip Operations**: State changes and transformation details
+- **⏭️ Skip Actions**: Pending change handling and file transitions
+- **💾 Save Operations**: Duration, success/error status, and file details
+- **📷 Image Loading**: Metadata, performance metrics, and file information
+- **🔌 IPC Communication**: Request/response timing and data flow
+
+### Log Format
+
+Logs use emojis for easy visual scanning and include:
+
+```
+🔄 ROTATE RIGHT: 90°
+   📁 File: example.jpg
+   🔄 Previous rotation: 0°
+   ✅ New rotation: 90°
+   🎯 Total pending transformations: {rotation: 90, flipVertical: false, flipHorizontal: false}
+✅ ROTATE RIGHT APPLIED: Visual preview updated
+```
+
+### Viewing Logs
+
+Logs are displayed in the console when running the application:
+
+```bash
+npm start
+```
+
+Open Developer Tools (F12) to view detailed logs in the console, or check the terminal output for main process logs.
+
+### Log Categories
+
+- **✅ Success Operations**: Completed actions with timing and results
+- **❌ Error Operations**: Failed actions with error details and duration
+- **🔄 In-Progress**: Operations currently being processed
+- **⚠️ Warnings**: Non-critical issues or blocked actions
+- **📊 Performance**: Timing and performance metrics for all operations
 
 ## Development
 
@@ -227,7 +287,27 @@ The application includes comprehensive error handling:
 
 ### Debug Mode
 
-Enable debug logging by setting:
+The application includes comprehensive built-in logging for all operations. To view detailed logs:
+
+1. **Console Logs**: Open Developer Tools (F12) in the application to view frontend logs
+2. **Terminal Logs**: Check the terminal where you ran `npm start` for backend logs
+3. **All Operations Logged**: Every user action is logged with timing and details
+
+Example log output:
+```
+🔄 NAVIGATION: NEXT
+   📂 Current: image1.jpg (1/5)
+   💾 Auto-saving pending transformations before navigation
+🔄 TRANSFORM START: image1.jpg
+   📁 Path: /path/to/image1.jpg
+   🔧 Transformations: {rotation: 90, flipVertical: false, flipHorizontal: false}
+✅ TRANSFORM SUCCESS: image1.jpg
+   ⏱️  Duration: 245ms
+✅ NAVIGATION SUCCESS: NEXT
+   📁 Now viewing: image2.jpg
+```
+
+For additional debugging, you can also set:
 
 ```bash
 export DEBUG=image-adjuster:*
