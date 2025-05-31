@@ -12,6 +12,14 @@ const api = {
   selectFolder: () => ipcRenderer.invoke('select-folder'),
 
   /**
+   * Scan folder for images
+   * @param {string} folderPath - Path to the folder to scan
+   * @returns {Promise<Object>} Result object with images array
+   */
+  scanFolder: (folderPath) => 
+    ipcRenderer.invoke('scan-folder', folderPath),
+
+  /**
    * Apply transformations to an image
    * @param {string} imagePath - Path to the image file
    * @param {Object} transformations - Transformation data
@@ -35,6 +43,33 @@ const api = {
    */
   deleteImage: (imagePath) => 
     ipcRenderer.invoke('delete-image', imagePath),
+
+  /**
+   * Get image metadata including star rating
+   * @param {string} imagePath - Path to the image file
+   * @returns {Promise<Object>} Result object with metadata
+   */
+  getImageMetadata: (imagePath) => 
+    ipcRenderer.invoke('get-image-metadata', imagePath),
+
+  /**
+   * Set star rating for an image
+   * @param {string} imagePath - Path to the image file
+   * @param {number} rating - Star rating (0-5)
+   * @returns {Promise<Object>} Result object with success status
+   */
+  setImageRating: (imagePath, rating) => 
+    ipcRenderer.invoke('set-image-rating', imagePath, rating),
+
+  /**
+   * Get rating from sidecar file
+   * @param {string} imagePath - Path to the image file
+   * @returns {Promise<Object>} Result object with rating
+   */
+  getRatingFromSidecar: (imagePath) => 
+    ipcRenderer.invoke('get-rating-from-sidecar', imagePath),
+
+  
 
   /**
    * Platform information

@@ -33,7 +33,8 @@
     "electron-builder": "^24.6.0"
   },
   "dependencies": {
-    "sharp": "^0.33.0"
+    "sharp": "^0.33.0",
+    "exifr": "^7.1.3"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -53,37 +53,25 @@ function createWindow() {
 }
 
 /**
- * Initialize application services
+ * Initialize the application
  */
-async function initializeServices() {
+async function initialize() {
   try {
-    // Import ES modules
-    const imageServiceModule = await import('../services/image-service.js');
-    imageService = imageServiceModule.default;
-
+    // Dynamically import the image service singleton
+    const { default: imageServiceInstance } = await import('../services/image-service.js');
+    imageService = imageServiceInstance;
     console.log('Image service initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize services:', error);
-  }
-}
-
-/**
- * Cleanup application resources
- */
-async function cleanup() {
-  try {
-    console.log('Application cleanup completed');
-  } catch (error) {
-    console.error('Error during cleanup:', error);
+    console.error('Failed to initialize image service:', error);
+    process.exit(1);
   }
 }
 
 // App event handlers
 app.whenReady().then(async () => {
-  await initializeServices();
+  await initialize();
   createWindow();
 
-  // Handle macOS dock icon click
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -91,54 +79,68 @@ app.whenReady().then(async () => {
   });
 });
 
-// Quit when all windows are closed
-app.on('window-all-closed', async () => {
-  await cleanup();
-  
-  // Quit the app on all platforms (including macOS) for this desktop application
+app.on('window-all-closed', () => {
+  // Always quit the app when all windows are closed, regardless of platform
   app.quit();
-});
-
-// Handle app quit
-app.on('before-quit', async () => {
-  await cleanup();
 });
 
 // IPC handlers
 ipcMain.handle('select-folder', async () => {
   const startTime = Date.now();
-  console.log(`🔌 IPC: select-folder request received`);
+  
+  console.log('🔌 IPC: select-folder request received');
   
   try {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ['openDirectory'],
       title: 'Select Image Folder'
     });
-
+    
     const duration = Date.now() - startTime;
-
+    
     if (!result.canceled && result.filePaths.length > 0) {
       const folderPath = result.filePaths[0];
-      console.log(`   📂 Dialog result: ${folderPath}`);
-      console.log(`   🔍 Scanning for images...`);
-      
-      const images = await imageService.scanFolder(folderPath);
-      
-      console.log(`✅ IPC: select-folder success`);
+      console.log('✅ IPC: select-folder success');
       console.log(`   ⏱️  Duration: ${duration}ms`);
-      console.log(`   📁 Folder: ${folderPath}`);
-      console.log(`   🖼️  Images: ${images.length}`);
+      console.log(`   📂 Selected: ${folderPath}`);
       
-      return { success: true, folderPath, images };
+      return { success: true, folderPath, canceled: false };
+    } else {
+      console.log('⚠️ IPC: select-folder canceled');
+      console.log(`   ⏱️  Duration: ${duration}ms`);
+      
+      return { success: true, canceled: true };
     }
-
-    console.log(`🚫 IPC: select-folder canceled`);
-    console.log(`   ⏱️  Duration: ${duration}ms`);
-    return { success: false, canceled: true };
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`❌ IPC: select-folder error`);
+    console.error('❌ IPC: select-folder error');
     console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   🚨 Error: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('scan-folder', async (event, folderPath) => {
+  const startTime = Date.now();
+  
+  console.log(`🔌 IPC: scan-folder request received`);
+  console.log(`   📂 Path: ${folderPath}`);
+  
+  try {
+    const images = await imageService.scanFolder(folderPath);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ IPC: scan-folder success`);
+    console.log(`   ⏱️  Duration: ${duration}ms`);
+    console.log(`   📂 Folder: ${folderPath}`);
+    console.log(`   🖼️  Images: ${images.length}`);
+    
+    return { success: true, folderPath, images };
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ IPC: scan-folder error`);
+    console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   📂 Folder: ${folderPath}`);
     console.error(`   🚨 Error: ${error.message}`);
     return { success: false, error: error.message };
   }
@@ -185,9 +187,9 @@ ipcMain.handle('get-image-data', async (event, imagePath) => {
     console.log(`✅ IPC: get-image-data success`);
     console.log(`   ⏱️  Duration: ${duration}ms`);
     console.log(`   📁 File: ${fileName}`);
-    console.log(`   📊 Size: ${imageData.width}x${imageData.height}, ${Math.round(imageData.size / 1024)} KB`);
+    console.log(`   📊 Size: ${Math.round(imageData.size / 1024)}KB`);
     
-    return { success: true, data: imageData };
+    return { success: true, imageData };
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`❌ IPC: get-image-data error`);
@@ -204,7 +206,6 @@ ipcMain.handle('delete-image', async (event, imagePath) => {
   
   console.log(`🔌 IPC: delete-image request received`);
   console.log(`   📁 File: ${fileName}`);
-  console.log(`   🗑️  Attempting to delete file`);
   
   try {
     await imageService.deleteImage(imagePath);
@@ -213,7 +214,6 @@ ipcMain.handle('delete-image', async (event, imagePath) => {
     console.log(`✅ IPC: delete-image success`);
     console.log(`   ⏱️  Duration: ${duration}ms`);
     console.log(`   📁 File: ${fileName}`);
-    console.log(`   🗑️  File deleted successfully`);
     
     return { success: true };
   } catch (error) {
@@ -226,11 +226,84 @@ ipcMain.handle('delete-image', async (event, imagePath) => {
   }
 });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+ipcMain.handle('get-image-metadata', async (event, imagePath) => {
+  const startTime = Date.now();
+  const fileName = imagePath.split('/').pop();
+  
+  console.log(`🔌 IPC: get-image-metadata request received`);
+  console.log(`   📁 File: ${fileName}`);
+  
+  try {
+    const metadata = await imageService.getImageMetadata(imagePath);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ IPC: get-image-metadata success`);
+    console.log(`   ⏱️  Duration: ${duration}ms`);
+    console.log(`   📁 File: ${fileName}`);
+    console.log(`   ⭐ Rating: ${metadata.rating || 'none'}`);
+    
+    return { success: true, metadata };
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ IPC: get-image-metadata error`);
+    console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   📁 File: ${fileName}`);
+    console.error(`   🚨 Error: ${error.message}`);
+    return { success: false, error: error.message };
+  }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+ipcMain.handle('set-image-rating', async (event, imagePath, rating) => {
+  const startTime = Date.now();
+  const fileName = imagePath.split('/').pop();
+  
+  console.log(`🔌 IPC: set-image-rating request received`);
+  console.log(`   📁 File: ${fileName}`);
+  console.log(`   ⭐ Rating: ${rating}`);
+  
+  try {
+    await imageService.setImageRating(imagePath, rating);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ IPC: set-image-rating success`);
+    console.log(`   ⏱️  Duration: ${duration}ms`);
+    console.log(`   📁 File: ${fileName}`);
+    console.log(`   ⭐ New rating: ${rating}`);
+    
+    return { success: true };
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ IPC: set-image-rating error`);
+    console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   📁 File: ${fileName}`);
+    console.error(`   🚨 Error: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('get-rating-from-sidecar', async (event, imagePath) => {
+  const startTime = Date.now();
+  const fileName = imagePath.split('/').pop();
+  
+  console.log(`🔌 IPC: get-rating-from-sidecar request received`);
+  console.log(`   📁 File: ${fileName}`);
+  
+  try {
+    const rating = await imageService.getRatingFromSidecar(imagePath);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ IPC: get-rating-from-sidecar success`);
+    console.log(`   ⏱️  Duration: ${duration}ms`);
+    console.log(`   📁 File: ${fileName}`);
+    console.log(`   ⭐ Rating: ${rating || 'none'}`);
+    
+    return { success: true, rating };
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ IPC: get-rating-from-sidecar error`);
+    console.error(`   ⏱️  Duration: ${duration}ms`);
+    console.error(`   📁 File: ${fileName}`);
+    console.error(`   🚨 Error: ${error.message}`);
+    return { success: false, error: error.message };
+  }
 });

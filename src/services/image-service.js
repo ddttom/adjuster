@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
+import exifr from 'exifr';
 
 /**
  * Image service for handling image operations
@@ -16,22 +17,42 @@ class ImageService {
   /**
    * Recursively scan a folder for image files
    * @param {string} folderPath - Path to the folder to scan
-   * @returns {Promise<Array>} Array of image file paths
+   * @returns {Promise<Array>} Array of image file paths sorted by filename
    */
   async scanFolder(folderPath) {
+    const startTime = Date.now();
+    console.log(`🔍 SCAN FOLDER START: ${folderPath}`);
+    
     try {
       const images = [];
+      console.log(`   📂 Starting directory scan...`);
       await this._scanDirectory(folderPath, images);
       
-      // Sort images by filename for consistent ordering
+      console.log(`   📊 Raw scan results: ${images.length} images found`);
+      if (images.length > 0) {
+        console.log(`   📋 First few images:`, images.slice(0, 5).map(img => path.basename(img)));
+      }
+      
+      // Sort by filename (natural alphabetical order)
+      console.log(`   🔄 Sorting images by filename...`);
       images.sort((a, b) => {
-        const nameA = path.basename(a).toLowerCase();
-        const nameB = path.basename(b).toLowerCase();
-        return nameA.localeCompare(nameB);
+        const filenameA = path.basename(a).toLowerCase();
+        const filenameB = path.basename(b).toLowerCase();
+        return filenameA.localeCompare(filenameB, undefined, { numeric: true });
       });
+
+      const duration = Date.now() - startTime;
+      console.log(`✅ SCAN FOLDER SUCCESS: ${folderPath}`);
+      console.log(`   ⏱️  Duration: ${duration}ms`);
+      console.log(`   🖼️  Total images: ${images.length}`);
+      console.log(`   📁 Supported formats: ${this.supportedFormats.join(', ')}`);
 
       return images;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ SCAN FOLDER ERROR: ${folderPath}`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
       console.error('Error scanning folder:', error);
       throw new Error(`Failed to scan folder: ${error.message}`);
     }
@@ -44,26 +65,45 @@ class ImageService {
    * @private
    */
   async _scanDirectory(dirPath, images) {
+    console.log(`   📂 Scanning directory: ${dirPath}`);
+    
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
+      console.log(`   📋 Found ${entries.length} entries in ${path.basename(dirPath)}`);
+
+      let fileCount = 0;
+      let dirCount = 0;
+      let imageCount = 0;
 
       for (const entry of entries) {
         const fullPath = path.join(dirPath, entry.name);
 
         if (entry.isDirectory()) {
+          dirCount++;
+          console.log(`   📁 Subdirectory: ${entry.name}`);
           // Recursively scan subdirectories
           await this._scanDirectory(fullPath, images);
         } else if (entry.isFile()) {
+          fileCount++;
           // Check if file is a supported image format
           const ext = path.extname(entry.name).toLowerCase();
+          console.log(`   📄 File: ${entry.name} (ext: ${ext})`);
+          
           if (this.supportedFormats.includes(ext)) {
+            imageCount++;
             images.push(fullPath);
+            console.log(`   ✅ Added image: ${entry.name}`);
+          } else {
+            console.log(`   ❌ Skipped (unsupported): ${entry.name}`);
           }
         }
       }
+
+      console.log(`   📊 Directory summary for ${path.basename(dirPath)}: ${fileCount} files, ${dirCount} subdirs, ${imageCount} images added`);
+      
     } catch (error) {
       // Log error but continue scanning other directories
-      console.warn(`Warning: Could not scan directory ${dirPath}:`, error.message);
+      console.warn(`⚠️  Warning: Could not scan directory ${dirPath}:`, error.message);
     }
   }
 
@@ -265,6 +305,161 @@ class ImageService {
   }
 
   /**
+   * Get image metadata including star rating
+   * @param {string} imagePath - Path to the image file
+   * @returns {Promise<Object>} Metadata object with rating, dates, etc.
+   */
+  async getImageMetadata(imagePath) {
+    const startTime = Date.now();
+    const fileName = path.basename(imagePath);
+    
+    try {
+      console.log(`📊 METADATA READ: ${fileName}`);
+      
+      // Get file stats for dates
+      const stats = await fs.stat(imagePath);
+      
+      // Read EXIF/XMP data
+      const exifData = await exifr.parse(imagePath, {
+        userComment: true,
+        xmp: true,
+        icc: false,
+        iptc: false,
+        jfif: false,
+        ihdr: false
+      });
+      
+      // Extract star rating from sidecar file first, then fallback to EXIF
+      let rating = 0;
+      
+      // Check for sidecar rating file first
+      const ratingFile = imagePath + '.rating';
+      try {
+        const ratingContent = await fs.readFile(ratingFile, 'utf8');
+        rating = parseInt(ratingContent.trim(), 10) || 0;
+        console.log(`   📄 Found sidecar rating file: ${rating}`);
+      } catch (sidecarError) {
+        console.log(`   📄 No sidecar rating file found`);
+        
+        // Fallback to EXIF data
+        if (exifData) {
+          console.log(`   🔍 Available EXIF fields:`, Object.keys(exifData));
+          
+          // Try standard Rating field first
+          if (exifData.Rating) {
+            rating = parseInt(exifData.Rating, 10) || 0;
+            console.log(`   📊 Found Rating field: ${rating}`);
+          }
+          
+          // Try UserComment field (our custom format)
+          if (rating === 0 && exifData.UserComment && typeof exifData.UserComment === 'string') {
+            console.log(`   📝 UserComment: "${exifData.UserComment}"`);
+            const match = exifData.UserComment.match(/rating:(\d)/);
+            if (match) {
+              rating = parseInt(match[1], 10);
+              console.log(`   📊 Found rating in UserComment: ${rating}`);
+            }
+          }
+          
+          // Try IFD0 Rating field
+          if (rating === 0 && exifData.IFD0 && exifData.IFD0.Rating) {
+            rating = parseInt(exifData.IFD0.Rating, 10) || 0;
+            console.log(`   📊 Found IFD0 Rating: ${rating}`);
+          }
+          
+          // Try IFD0 UserComment field
+          if (rating === 0 && exifData.IFD0 && exifData.IFD0.UserComment && typeof exifData.IFD0.UserComment === 'string') {
+            console.log(`   📝 IFD0 UserComment: "${exifData.IFD0.UserComment}"`);
+            const match = exifData.IFD0.UserComment.match(/rating:(\d)/);
+            if (match) {
+              rating = parseInt(match[1], 10);
+              console.log(`   📊 Found rating in IFD0 UserComment: ${rating}`);
+            }
+          }
+        }
+      }
+      
+      const duration = Date.now() - startTime;
+      console.log(`✅ METADATA READ SUCCESS: ${fileName}`);
+      console.log(`   ⏱️  Duration: ${duration}ms`);
+      console.log(`   ⭐ Rating: ${rating}`);
+      
+      return {
+        rating: Math.max(0, Math.min(5, rating)), // Clamp to 0-5
+        dateModified: stats.mtime,
+        dateCreated: stats.birthtime || stats.mtime,
+        size: stats.size
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ METADATA READ ERROR: ${fileName}`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
+      
+      // Return default metadata on error
+      const stats = await fs.stat(imagePath);
+      return {
+        rating: 0,
+        dateModified: stats.mtime,
+        dateCreated: stats.birthtime || stats.mtime,
+        size: stats.size
+      };
+    }
+  }
+
+  /**
+   * Set star rating for an image
+   * @param {string} imagePath - Path to the image file
+   * @param {number} rating - Star rating (0-5)
+   * @returns {Promise<void>}
+   */
+  async setImageRating(imagePath, rating) {
+    const startTime = Date.now();
+    const fileName = path.basename(imagePath);
+    
+    try {
+      console.log(`⭐ RATING SET: ${fileName}`);
+      console.log(`   📁 Path: ${imagePath}`);
+      console.log(`   ⭐ Rating: ${rating}`);
+      
+      // Validate rating
+      const validRating = Math.max(0, Math.min(5, parseInt(rating, 10) || 0));
+      
+      // Use a simpler approach - store rating in a sidecar file
+      // This avoids the complexity of EXIF metadata writing which can be unreliable
+      const ratingFile = imagePath + '.rating';
+      
+      console.log(`   📝 Writing rating to sidecar file: ${ratingFile}`);
+      console.log(`   ⭐ Rating value: ${validRating}`);
+      
+      // Write rating to a simple text file
+      await fs.writeFile(ratingFile, validRating.toString(), 'utf8');
+      
+      const duration = Date.now() - startTime;
+      console.log(`✅ RATING SET SUCCESS: ${fileName}`);
+      console.log(`   ⏱️  Duration: ${duration}ms`);
+      console.log(`   ⭐ Rating saved: ${validRating}`);
+      
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ RATING SET ERROR: ${fileName}`);
+      console.error(`   ⏱️  Duration: ${duration}ms`);
+      console.error(`   🚨 Error: ${error.message}`);
+      
+      // Clean up temp file if it exists
+      try {
+        await fs.unlink(imagePath + '.rating.tmp');
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+      
+      throw new Error(`Failed to set rating: ${error.message}`);
+    }
+  }
+
+  
+
+  /**
    * Delete an image file
    * @param {string} imagePath - Path to the image file to delete
    * @returns {Promise<void>}
@@ -295,6 +490,23 @@ class ImageService {
       console.error(`   🚨 Error: ${error.message}`);
       
       throw new Error(`Failed to delete image: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get rating from sidecar file only (for performance)
+   * @param {string} imagePath - Path to the image file
+   * @returns {Promise<number>} Rating (0-5)
+   */
+  async getRatingFromSidecar(imagePath) {
+    try {
+      const ratingFile = imagePath + '.rating';
+      const ratingContent = await fs.readFile(ratingFile, 'utf8');
+      const rating = parseInt(ratingContent.trim(), 10) || 0;
+      return Math.max(0, Math.min(5, rating)); // Clamp to 0-5
+    } catch (error) {
+      // No sidecar file or error reading it
+      return 0;
     }
   }
 

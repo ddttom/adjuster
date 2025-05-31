@@ -19,17 +19,29 @@ npm start
 
 - **Folder Selection**: Choose any folder containing images to start viewing
 - **Recursive Scanning**: Automatically finds images in all subdirectories
+- **Star Rating System**:
+  - Rate images from 1-5 stars using number keys (1-5)
+  - Clear ratings with the 0 key
+  - Ratings stored in sidecar files (`.rating` files alongside images)
+  - Visual star display with click and hover interactions
+  - Lazy metadata loading for optimal performance
+- **Simple Sorting**: Alphabetical filename sorting for consistent, predictable order
 - **Image Transformations**:
   - Rotate left/right (90° increments)
-  - Flip vertically
-  - Mirror (flip horizontally)
+  - Flip vertically (F key)
+  - Mirror/flip horizontally (M key)
   - Real-time preview of changes
 - **File Management**:
   - Delete images with confirmation dialog
   - Automatic navigation after deletion
 - **Navigation**:
   - Previous/Next image navigation
-  - Keyboard shortcuts (arrow keys)
+  - Keyboard shortcuts:
+    - Left/Right arrow keys for navigation
+    - Number keys 1-5 for star ratings
+    - 0 key to clear ratings
+    - M key for horizontal flip
+    - F key for vertical flip
   - Skip functionality to advance without saving
 - **Auto-Save**: Automatically saves transformations when navigating to different images
 - **Supported Formats**: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF
@@ -44,6 +56,7 @@ npm start
 - **Modern JavaScript**: ES2022+ with ES modules
 - **No TypeScript**: Maintains simplicity and reduces build complexity
 - **Pure CSS**: No preprocessors, clean and maintainable styles
+- **Image Processing**: Sharp library for transformations, exifr for metadata handling
 - **Security**: Context isolation, CSP headers, secure IPC communication
 - **Testing**: Jest with comprehensive test coverage
 
@@ -73,7 +86,8 @@ adjuster/
 ├── docs/               # Documentation
 │   └── development-notes/ # Development notes
 ├── documents/          # Technical specifications
-│   └── tech-spec.md    # Technical specifications
+│   ├── tech-spec.md    # Technical specifications
+│   └── prd.md          # Product Requirements Document
 ├── babel.config.cjs    # Babel configuration for tests
 ├── jest.config.js      # ES modules Jest config
 ├── jest.config.cjs     # CommonJS Jest config
@@ -140,8 +154,10 @@ This will:
 | `→` | Next image |
 | `R` | Rotate right 90° |
 | `L` | Rotate left 90° |
-| `V` | Flip vertically |
-| `H` | Mirror (flip horizontally) |
+| `F` | Flip vertically |
+| `M` | Mirror (flip horizontally) |
+| `1-5` | Set star rating (1-5 stars) |
+| `0` | Clear star rating |
 | `D` / `Del` | Delete current image |
 | `S` | Skip to next image |
 | `?` | Show/hide help |
@@ -158,8 +174,8 @@ All major operations are logged with detailed information including:
 - **📁 Folder Selection**: Timing, path, and image count
 - **🔄 Image Navigation**: Direction, auto-save detection, and file names
 - **↻ Rotate Operations**: Degree tracking and transformation state
-- **⇅ Flip Vertical Operations**: State changes and transformation details (V key)
-- **⇄ Mirror (Flip Horizontal) Operations**: State changes and transformation details (H key)
+- **⇅ Flip Vertical Operations**: State changes and transformation details (F key)
+- **⇄ Mirror (Flip Horizontal) Operations**: State changes and transformation details (M key)
 - **🗑️ Delete Operations**: File deletion with confirmation and navigation handling
 - **⏭️ Skip Actions**: Pending change handling and file transitions
 - **💾 Save Operations**: Duration, success/error status, and file details
@@ -302,11 +318,33 @@ The application includes comprehensive error handling:
 - **Empty Directories**: Graceful handling of folders with no images
 - **User Feedback**: Toast notifications for all operations
 
+## Rating Storage
+
+The application uses a sidecar file approach for storing star ratings:
+
+- **Sidecar Files**: Ratings are stored in `.rating` files alongside images (e.g., `photo.jpg.rating`)
+- **Simple Format**: Each sidecar file contains just the rating number (0-5)
+- **Non-Destructive**: Original image files remain completely untouched
+- **Portable**: Rating files can be easily backed up, transferred, or synchronized
+- **Reliable**: Simple text files avoid complex metadata writing issues
+- **Fast**: Quick file I/O operations without image processing overhead
+
+### Example
+```
+/photos/
+├── vacation.jpg        # Original image
+├── vacation.jpg.rating # Contains "4" (4-star rating)
+├── sunset.png          # Original image
+└── sunset.png.rating   # Contains "5" (5-star rating)
+```
+
 ## Performance Considerations
 
 - **Image Optimization**: Large images are automatically resized for display
 - **Memory Management**: Efficient image loading and cleanup
-- **Lazy Loading**: Images are loaded on-demand
+- **Lazy Loading**: Images and metadata are loaded on-demand for optimal performance
+- **Fast Folder Scanning**: Metadata is only read when images are displayed, not during initial scan
+- **Sidecar File Performance**: Rating storage uses simple file I/O without image processing
 - **Resource Cleanup**: Proper cleanup on application exit
 
 ## Troubleshooting
