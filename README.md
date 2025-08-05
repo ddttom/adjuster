@@ -330,7 +330,8 @@ The application uses a sidecar file approach for storing star ratings:
 - **Fast**: Quick file I/O operations without image processing overhead
 
 ### Example
-```
+
+```bash
 /photos/
 ├── vacation.jpg        # Original image
 ├── vacation.jpg.rating # Contains "4" (4-star rating)

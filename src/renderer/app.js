@@ -34,6 +34,9 @@ class ImageAdjuster {
       this.setupKeyboardShortcuts();
       this.initializeStarDisplay(); // Initialize empty star display
       
+      // Try to auto-load the last used folder
+      await this.tryAutoLoadLastFolder();
+      
       console.log('Image Adjuster initialized successfully');
     } catch (error) {
       console.error('Failed to initialize application:', error);
@@ -263,6 +266,9 @@ class ImageAdjuster {
           this.currentIndex = 0;
           this.resetTransformations();
           this.resetRatingState(); // Reset rating state for new folder
+          
+          // Save this folder as the last used folder
+          this.saveLastFolder(scanResult.folderPath);
           
           // Build ratings cache from sidecar files
           console.log('🗂️  BUILDING RATINGS CACHE...');
@@ -1067,6 +1073,91 @@ class ImageAdjuster {
    */
   hideHelp() {
     this.elements.helpOverlay.classList.add('hidden');
+  }
+
+  /**
+   * Save the last used folder path to localStorage
+   * @param {string} folderPath - The folder path to save
+   */
+  saveLastFolder(folderPath) {
+    try {
+      localStorage.setItem('imageAdjuster_lastFolder', folderPath);
+      console.log('💾 SAVED last folder:', folderPath);
+    } catch (error) {
+      console.error('❌ Failed to save last folder:', error);
+    }
+  }
+
+  /**
+   * Get the last used folder path from localStorage
+   * @returns {string|null} The last folder path or null if not found
+   */
+  getLastFolder() {
+    try {
+      const lastFolder = localStorage.getItem('imageAdjuster_lastFolder');
+      console.log('📂 RETRIEVED last folder:', lastFolder || 'none');
+      return lastFolder;
+    } catch (error) {
+      console.error('❌ Failed to retrieve last folder:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Try to auto-load the last used folder on startup
+   */
+  async tryAutoLoadLastFolder() {
+    const lastFolder = this.getLastFolder();
+    
+    if (!lastFolder) {
+      console.log('🏠 AUTO-LOAD: No last folder found, showing welcome screen');
+      return;
+    }
+
+    console.log('🔄 AUTO-LOAD: Attempting to load last folder:', lastFolder);
+    
+    try {
+      // Check if folder still exists and scan it
+      const scanResult = await window.electronAPI.scanFolder(lastFolder);
+      
+      if (scanResult.success && scanResult.images.length > 0) {
+        console.log('✅ AUTO-LOAD: Successfully loaded last folder');
+        console.log('   📂 Folder:', lastFolder);
+        console.log('   🖼️  Images:', scanResult.images.length);
+        
+        this.images = scanResult.images;
+        this.currentFolder = scanResult.folderPath;
+        this.currentIndex = 0;
+        this.resetTransformations();
+        this.resetRatingState();
+        
+        // Build ratings cache
+        this.ratingsCache.clear();
+        await this.buildRatingsCache();
+        
+        this.showImageViewer();
+        await this.loadCurrentImage();
+        this.updateUI();
+        this.showSuccess(`Auto-loaded ${this.images.length} images from last folder`);
+        
+      } else {
+        console.log('⚠️ AUTO-LOAD: Last folder is empty or inaccessible');
+        console.log('   📂 Folder:', lastFolder);
+        console.log('   🖼️  Images found:', scanResult.images ? scanResult.images.length : 0);
+        
+        // Clear the invalid folder from storage
+        localStorage.removeItem('imageAdjuster_lastFolder');
+        this.showError('Last folder is no longer accessible or contains no images');
+      }
+    } catch (error) {
+      console.error('❌ AUTO-LOAD: Failed to load last folder');
+      console.error('   📂 Folder:', lastFolder);
+      console.error('   🚨 Error:', error.message);
+      
+      // Clear the invalid folder from storage
+      localStorage.removeItem('imageAdjuster_lastFolder');
+      this.showError('Failed to load last folder');
+    }
   }
 }
 
