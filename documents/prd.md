@@ -294,6 +294,67 @@ To provide the fastest, most intuitive desktop image management tool that enable
 - **Advanced Transformations**: Crop, resize, color adjustments
 - **Collaboration Features**: Share ratings and collections
 
+## Utility Scripts
+
+### CR3 Cleanup Utility
+
+The application includes a specialized utility script for managing Canon RAW (.CR3) files in photography workflows.
+
+#### Purpose and Use Case
+
+Professional photographers often shoot in RAW+JPEG mode, creating both .CR3 (Canon RAW) and .JPG (processed) files. After culling and processing photos, photographers may want to remove orphaned RAW files that don't have corresponding JPEG files to save storage space.
+
+#### Functional Requirements
+
+- **REQ-056**: Scan specified directory for .CR3 files without matching .JPG files
+- **REQ-057**: Non-recursive directory scanning (single folder only)
+- **REQ-058**: Exact filename matching (case-sensitive: `photo.CR3` ↔ `photo.JPG`)
+- **REQ-059**: Interactive user confirmation before deletion
+- **REQ-060**: Safe deletion with individual file progress reporting
+- **REQ-061**: Comprehensive error handling for file system operations
+- **REQ-062**: Directory validation and permission checking
+
+#### Technical Specifications
+
+- **Implementation**: Bash script for cross-platform compatibility
+- **Location**: `scripts/cleanup-cr3.sh`
+- **Execution**: Command-line utility with interactive prompts
+- **Safety Features**: Explicit user confirmation required (`y` or `yes`)
+- **Error Handling**: Validates directory existence and file permissions
+- **Feedback**: Detailed progress reporting and operation results
+
+#### Usage Workflow
+
+1. **Script Execution**: User runs `./scripts/cleanup-cr3.sh`
+2. **Directory Input**: User provides path to photo directory
+3. **File Scanning**: Script identifies orphaned .CR3 files
+4. **Results Display**: Lists all orphaned files found
+5. **User Confirmation**: Prompts for deletion confirmation
+6. **Safe Deletion**: Removes only confirmed orphaned files
+7. **Results Summary**: Reports deletion success/failure statistics
+
+#### Performance Requirements
+
+- **NFR-036**: Directory scanning completes in under 1 second for 1000+ files
+- **NFR-037**: File deletion operations complete in under 5 seconds per 100 files
+- **NFR-038**: Memory usage remains minimal during operation
+- **NFR-039**: Handles large directories (10,000+ files) efficiently
+
+#### Safety and Reliability
+
+- **Data Protection**: Only deletes files explicitly confirmed by user
+- **Non-destructive Scanning**: Read-only operations during file discovery
+- **Error Recovery**: Continues operation if individual file deletion fails
+- **Audit Trail**: Detailed logging of all operations and results
+- **Rollback Protection**: No automatic undo - user confirmation required
+
+#### Target Users
+
+- **Professional Photographers**: Managing large photo shoots with RAW+JPEG workflows
+- **Photography Studios**: Batch cleanup of processed photo collections
+- **Digital Asset Managers**: Maintaining organized photo libraries
+- **Content Creators**: Optimizing storage usage in photography workflows
+
 ## Acceptance Criteria
 
 ### Core Functionality
@@ -303,6 +364,13 @@ To provide the fastest, most intuitive desktop image management tool that enable
 - [ ] Navigate between images using arrow keys
 - [ ] Apply and save basic transformations (rotate, flip)
 - [ ] Delete images with proper confirmation
+
+### Utility Scripts
+
+- [ ] CR3 cleanup script identifies orphaned .CR3 files without matching .JPG files
+- [ ] Script requires explicit user confirmation before deletion
+- [ ] Script handles directory validation and error conditions gracefully
+- [ ] Script provides detailed feedback on operations and results
 
 ### Performance Standards
 

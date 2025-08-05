@@ -460,7 +460,7 @@ class ImageService {
   
 
   /**
-   * Delete an image file
+   * Delete an image file and any corresponding CR3 file
    * @param {string} imagePath - Path to the image file to delete
    * @returns {Promise<void>}
    */
@@ -475,13 +475,33 @@ class ImageService {
       // Validate image path first
       await this._validateImagePath(imagePath);
       
-      // Delete the file
+      // Delete the main image file
       await fs.unlink(imagePath);
+      console.log(`   ✅ Main image file deleted: ${fileName}`);
+      
+      // Check for and delete corresponding CR3 file
+      const parsedPath = path.parse(imagePath);
+      const cr3Path = path.join(parsedPath.dir, parsedPath.name + '.cr3');
+      const cr3PathUpper = path.join(parsedPath.dir, parsedPath.name + '.CR3');
+      
+      // Try to delete CR3 file (lowercase extension)
+      try {
+        await fs.unlink(cr3Path);
+        console.log(`   ✅ Corresponding CR3 file deleted: ${parsedPath.name}.cr3`);
+      } catch (cr3Error) {
+        // Try uppercase extension
+        try {
+          await fs.unlink(cr3PathUpper);
+          console.log(`   ✅ Corresponding CR3 file deleted: ${parsedPath.name}.CR3`);
+        } catch (cr3UpperError) {
+          console.log(`   ℹ️  No corresponding CR3 file found (${parsedPath.name}.cr3 or ${parsedPath.name}.CR3)`);
+        }
+      }
       
       const duration = Date.now() - startTime;
       console.log(`✅ DELETE SUCCESS: ${fileName}`);
       console.log(`   ⏱️  Duration: ${duration}ms`);
-      console.log(`   🗑️  File removed from disk`);
+      console.log(`   🗑️  Files removed from disk`);
       
     } catch (error) {
       const duration = Date.now() - startTime;

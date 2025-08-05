@@ -88,6 +88,8 @@ adjuster/
 ├── documents/          # Technical specifications
 │   ├── tech-spec.md    # Technical specifications
 │   └── prd.md          # Product Requirements Document
+├── scripts/           # Utility scripts
+│   └── cleanup-cr3.sh  # CR3 file cleanup utility
 ├── babel.config.cjs    # Babel configuration for tests
 ├── jest.config.js      # ES modules Jest config
 ├── jest.config.cjs     # CommonJS Jest config
@@ -136,6 +138,71 @@ This will:
 
 - Launch the Electron desktop window
 - Display the folder selection dialog
+
+## Utility Scripts
+
+### CR3 Cleanup Script
+
+The project includes a utility script for cleaning up orphaned Canon RAW (.CR3) files that don't have matching JPEG files.
+
+#### Purpose
+
+When shooting in RAW+JPEG mode, cameras create both .CR3 (raw) and .JPG (processed) files. Sometimes you may want to delete RAW files that don't have corresponding JPEG files, typically after culling or processing your photos.
+
+#### Usage
+
+```bash
+./scripts/cleanup-cr3.sh
+```
+
+The script will:
+
+1. **Prompt for folder path**: Enter the directory containing your photos
+2. **Scan for orphaned files**: Finds .CR3 files without matching .JPG files
+3. **Display results**: Shows a list of all orphaned .CR3 files found
+4. **Confirm deletion**: Asks for user confirmation before deleting any files
+5. **Delete safely**: Only deletes confirmed orphaned files
+
+#### Features
+
+- **Non-recursive scanning**: Only searches the specified folder, not subdirectories
+- **Exact filename matching**: Matches `photo.CR3` with `photo.JPG` (case-sensitive)
+- **Safe deletion**: Requires explicit user confirmation (`y` or `yes`)
+- **Error handling**: Validates directory existence and file permissions
+- **Detailed feedback**: Shows progress and results of all operations
+
+#### Example
+
+```bash
+$ ./scripts/cleanup-cr3.sh
+CR3 Cleanup Script
+Enter folder path: /Volumes/Camera/DCIM/100CANON
+
+Scanning directory: /Volumes/Camera/DCIM/100CANON
+Looking for .CR3 files without matching .JPG files...
+
+Found 3 orphaned .CR3 file(s):
+  - IMG_001.CR3
+  - IMG_005.CR3
+  - IMG_010.CR3
+
+Delete these files? (y/yes): y
+
+Deleting orphaned .CR3 files...
+Deleted: /Volumes/Camera/DCIM/100CANON/IMG_001.CR3
+Deleted: /Volumes/Camera/DCIM/100CANON/IMG_005.CR3
+Deleted: /Volumes/Camera/DCIM/100CANON/IMG_010.CR3
+
+Deletion complete:
+  Successfully deleted: 3 files
+```
+
+#### Safety Features
+
+- **Confirmation required**: Won't delete anything without explicit user approval
+- **Directory validation**: Checks folder exists and is readable before proceeding
+- **File-by-file deletion**: Reports success/failure for each file individually
+- **No recursive search**: Only processes files in the specified directory
 
 ## Application Workflow
 

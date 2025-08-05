@@ -254,4 +254,82 @@ describe('ImageService', () => {
       expect(formats.length).toBeGreaterThan(0);
     });
   });
+
+  describe('deleteImage', () => {
+    it('should delete main image file only when no CR3 file exists', async () => {
+      fs.stat.mockResolvedValue({ isFile: () => true });
+      fs.unlink
+        .mockResolvedValueOnce() // Main image file deletion succeeds
+        .mockRejectedValueOnce(new Error('ENOENT: no such file')) // CR3 lowercase fails
+        .mockRejectedValueOnce(new Error('ENOENT: no such file')); // CR3 uppercase fails
+
+      await imageService.deleteImage('/test/folder/image.jpg');
+
+      expect(fs.unlink).toHaveBeenCalledTimes(3);
+      expect(fs.unlink).toHaveBeenNthCalledWith(1, '/test/folder/image.jpg');
+      expect(fs.unlink).toHaveBeenNthCalledWith(2, '/test/folder/image.cr3');
+      expect(fs.unlink).toHaveBeenNthCalledWith(3, '/test/folder/image.CR3');
+    });
+
+    it('should delete both main image and corresponding CR3 file (lowercase)', async () => {
+      fs.stat.mockResolvedValue({ isFile: () => true });
+      fs.unlink
+        .mockResolvedValueOnce() // Main image file deletion succeeds
+        .mockResolvedValueOnce(); // CR3 lowercase deletion succeeds
+
+      await imageService.deleteImage('/test/folder/photo.png');
+
+      expect(fs.unlink).toHaveBeenCalledTimes(2);
+      expect(fs.unlink).toHaveBeenNthCalledWith(1, '/test/folder/photo.png');
+      expect(fs.unlink).toHaveBeenNthCalledWith(2, '/test/folder/photo.cr3');
+    });
+
+    it('should delete both main image and corresponding CR3 file (uppercase)', async () => {
+      fs.stat.mockResolvedValue({ isFile: () => true });
+      fs.unlink
+        .mockResolvedValueOnce() // Main image file deletion succeeds
+        .mockRejectedValueOnce(new Error('ENOENT: no such file')) // CR3 lowercase fails
+        .mockResolvedValueOnce(); // CR3 uppercase deletion succeeds
+
+      await imageService.deleteImage('/test/folder/photo.jpg');
+
+      expect(fs.unlink).toHaveBeenCalledTimes(3);
+      expect(fs.unlink).toHaveBeenNthCalledWith(1, '/test/folder/photo.jpg');
+      expect(fs.unlink).toHaveBeenNthCalledWith(2, '/test/folder/photo.cr3');
+      expect(fs.unlink).toHaveBeenNthCalledWith(3, '/test/folder/photo.CR3');
+    });
+
+    it('should handle main image deletion failure', async () => {
+      fs.stat.mockResolvedValue({ isFile: () => true });
+      fs.unlink.mockRejectedValue(new Error('Permission denied'));
+
+      await expect(imageService.deleteImage('/test/folder/protected.jpg'))
+        .rejects.toThrow('Failed to delete image');
+
+      expect(fs.unlink).toHaveBeenCalledTimes(1);
+      expect(fs.unlink).toHaveBeenCalledWith('/test/folder/protected.jpg');
+    });
+
+    it('should handle invalid image path', async () => {
+      fs.stat.mockRejectedValue(new Error('File not found'));
+
+      await expect(imageService.deleteImage('/invalid/path.jpg'))
+        .rejects.toThrow('Failed to delete image');
+
+      expect(fs.unlink).not.toHaveBeenCalled();
+    });
+
+    it('should work with complex file paths and extensions', async () => {
+      fs.stat.mockResolvedValue({ isFile: () => true });
+      fs.unlink
+        .mockResolvedValueOnce() // Main image file deletion succeeds
+        .mockResolvedValueOnce(); // CR3 lowercase deletion succeeds
+
+      await imageService.deleteImage('/deep/nested/folder/IMG_1234.JPEG');
+
+      expect(fs.unlink).toHaveBeenCalledTimes(2);
+      expect(fs.unlink).toHaveBeenNthCalledWith(1, '/deep/nested/folder/IMG_1234.JPEG');
+      expect(fs.unlink).toHaveBeenNthCalledWith(2, '/deep/nested/folder/IMG_1234.cr3');
+    });
+  });
 });
